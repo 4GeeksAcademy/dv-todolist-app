@@ -4,16 +4,35 @@ db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    name = db.Column(db.String(120), unique=True, nullable=False)
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+    todos = db.relationship("Todos", back_populates="user")
+
+    def serialize(self):
+        return {
+            "name": self.name,
+            "todos": [item.serialize() for item in self.todos]
+        }
+    
+    def serialize_users(self):
+        return {
+            "id": self.id,
+            "name":self.name
+        }
+
+
+class Todos(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(255), nullable=False)
+    is_done = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    user = db.relationship("User", back_populates="todos")
+
 
     def serialize(self):
         return {
             "id": self.id,
-            "email": self.email,
-            # do not serialize the password, its a security breach
+            "label": self.label,
+            "is_done":self.is_done
         }

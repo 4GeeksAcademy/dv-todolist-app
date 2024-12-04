@@ -36,14 +36,71 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route("/user/<string:username>", methods=["POST"])
+def create_user(username=None):
+    
+    user = User()
+    user_1 = user.query.filter_by(name=username).one_or_none()
+   
+    if user_1 is not None: 
+        return jsonify("El usuario ya existe"), 400
+    
+    user.name = username
+    db.session.add(user)
 
-    return jsonify(response_body), 200
+    try:
+        db.session.commit()
+
+        return jsonify({
+            "id":user.id,
+            "name": user.name,
+        }), 201
+    except Exception as err:
+        print(err.args)
+        return jsonify(err.args), 500
+
+
+@app.route("/user/<string:username>", methods=["DELETE"])
+def delete_user(username=None):
+    user = User.query.filter_by(name=username).one_or_none()
+
+    if user is None:
+        return jsonify({"message":"el usuario no existe"}), 400
+
+    else:
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            return jsonify([]), 204
+        except Exception as err:
+            return jsonify(err), 500
+        
+
+@app.route("/user/<string:username>", methods=["GET"])
+def get_one_user(username=None):
+    user = User.query.filter_by(name=username).one_or_none()
+    print(user)
+
+    if user is None:
+        return jsonify({"message": f"El usuario {username} no existe"}), 404
+
+    return jsonify(user.serialize()), 201
+
+
+@app.route("/user", methods=["GET"])
+def get_all_users():
+    user = User.query.all()
+    
+    return jsonify({
+        "users": list(map(lambda item: item.serialize_users(), user))
+    }), 200
+
+
+@app.route("/todos/<string:username>", methods=["POST"])
+def add_todo(username=None):
+    return jsonify("trabajando por usted")
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
