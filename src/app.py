@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Todos
 #from models import Person
 
 app = Flask(__name__)
@@ -99,6 +99,31 @@ def get_all_users():
 
 @app.route("/todos/<string:username>", methods=["POST"])
 def add_todo(username=None):
+    body = request.json
+
+    user_id = User.query.filter_by(name=username).one_or_none()
+
+    user = Todos()
+    if body.get("label") is None:
+        return jsonify("debes tener un label"), 400
+    
+    if body.get("is_done") is None:
+        return jsonify("debes tener un is_done"), 400
+    
+    user.label = body.get("label")
+    user.is_done = body.get("is_done")
+    user.user_id = user_id.id
+    db.session.add(user)
+
+
+    try:
+        db.session.commit()
+        return jsonify("tarea agregada exitosamente"), 201
+    except Exception as err:
+        return jsonify(err), 500
+
+    print(body)
+
     return jsonify("trabajando por usted")
 
 
