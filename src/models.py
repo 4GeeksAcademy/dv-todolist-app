@@ -26,6 +26,27 @@ class User(db.Model):
         }
 
 
+    def create(username):
+        try:
+            user_exist = User.query.filter_by(name=username).one_or_none()
+            print(user_exist)
+
+            if user_exist is not None:
+                return None, "El usuario ya existe"
+            else:
+                user = User()
+                user.name = username
+
+                db.session.add(user)
+                db.session.commit()
+                return True, user
+           
+        except Exception as err:
+            pass
+        
+
+
+
 class Todos(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     label = db.Column(db.String(255), nullable=False)

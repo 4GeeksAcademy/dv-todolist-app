@@ -39,25 +39,43 @@ def sitemap():
 
 @app.route("/user/<string:username>", methods=["POST"])
 def create_user(username=None):
-    
-    user = User()
-    user_1 = user.query.filter_by(name=username).one_or_none()
-   
-    if user_1 is not None: 
-        return jsonify("El usuario ya existe"), 400
-    
-    user.name = username
-    db.session.add(user)
-
     try:
-        db.session.commit()
+        user = User.create(username=username)
+        success, message = user
 
-        return jsonify({
-            "id":user.id,
-            "name": user.name,
-        }), 201
+        print(user, "desde routes")
+
+        if success is None:
+            return jsonify("El usuario ya existe"), 400
+        elif success:
+            return jsonify({
+            "id":message.id,
+            "name": message.name,
+         })
+        else:
+            return jsonify("Exploto"), 500
     except Exception as err:
+        print(err)
         return jsonify(err.args), 500
+    
+    # user = User()
+    # user_1 = user.query.filter_by(name=username).one_or_none()
+   
+    # if user_1 is not None: 
+    #     return jsonify("El usuario ya existe"), 400
+    
+    # user.name = username
+    # db.session.add(user)
+
+    # try:
+    #     db.session.commit()
+
+    #     return jsonify({
+    #         "id":user.id,
+    #         "name": user.name,
+    #     }), 201
+    # except Exception as err:
+    #     return jsonify(err.args), 500
 
 
 @app.route("/user/<string:username>", methods=["DELETE"])
