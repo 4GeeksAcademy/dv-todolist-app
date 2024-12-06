@@ -6,12 +6,17 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
 
-    todos = db.relationship("Todos", back_populates="user")
+    todos = db.relationship("Todos", back_populates="user", cascade="all, delete")
 
     def serialize(self):
+        # self.todos = self.todos.order_by(Todos.label.asc()).all()
+        
         return {
             "name": self.name,
-            "todos": [item.serialize() for item in self.todos]
+            # "todos": [item.serialize() for item in self.todos]
+            "todos": sorted(
+                [item.serialize() for item in self.todos], key=lambda todo: todo["id"]
+            )
         }
     
     def serialize_users(self):

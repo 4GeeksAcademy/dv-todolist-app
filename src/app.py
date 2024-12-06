@@ -57,13 +57,13 @@ def create_user(username=None):
             "name": user.name,
         }), 201
     except Exception as err:
-        print(err.args)
         return jsonify(err.args), 500
 
 
 @app.route("/user/<string:username>", methods=["DELETE"])
 def delete_user(username=None):
     user = User.query.filter_by(name=username).one_or_none()
+    #
 
     if user is None:
         return jsonify({"message":"el usuario no existe"}), 400
@@ -74,17 +74,17 @@ def delete_user(username=None):
             db.session.commit()
             return jsonify([]), 204
         except Exception as err:
-            return jsonify(err), 500
+            return jsonify(err.args), 500
         
 
 @app.route("/user/<string:username>", methods=["GET"])
 def get_one_user(username=None):
     user = User.query.filter_by(name=username).one_or_none()
-    print(user)
 
     if user is None:
         return jsonify({"message": f"El usuario {username} no existe"}), 404
 
+    
     return jsonify(user.serialize()), 201
 
 
@@ -122,9 +122,45 @@ def add_todo(username=None):
     except Exception as err:
         return jsonify(err), 500
 
-    print(body)
 
-    return jsonify("trabajando por usted")
+@app.route("/todos/<int:theid>", methods=["PUT"])
+def update_task(theid=None):
+    body = request.json
+    todo = Todos.query.get(theid)
+    
+    if body.get("label") is None:
+        return jsonify("debes tener un label"), 400
+    
+    if body.get("is_done") is None:
+        return jsonify("debes tener un is_done"), 400
+
+    if todo is None:
+        return jsonify({"detail": f"Todo #{theid} doesn't exist."})
+    else:
+        try:
+            todo.label = body.get("label")
+            todo.is_done = body.get("is_done")
+            db.session.commit()
+            return jsonify(todo.serialize()), 200
+        except Exception as err:
+            return jsonify(err.args)
+    
+
+@app.route("/todos/<int:theid>", methods=["DELETE"])
+def delete_task(theid=None):
+
+    todo = Todos.query.get(theid)
+    
+    if todo is None:
+        return jsonify({"detail": f"Todo #{theid} doesn't exist."})
+    else:
+        try:
+            db.session.delete(todo)
+            db.session.commit()
+            return jsonify([]), 204
+        except Exception as err:
+            return jsonify(err.args)
+
 
 
 # this only runs if `$ python src/app.py` is executed
